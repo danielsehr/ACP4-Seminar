@@ -1,0 +1,10 @@
+# Files
+*.odt
+
+# Folders
+.vscode
+/pycache/*
+__pycache__
+
+data/
+excercises/
