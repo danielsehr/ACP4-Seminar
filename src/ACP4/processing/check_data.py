@@ -5,6 +5,25 @@ from dataclasses import fields
 from ACP4.processing.read_data import Data
 
 
+def align_timeseries(
+    data: Data,
+    ) -> Data:
+    
+    start = max(
+        getattr(data, field.name).index.min()
+        for field in fields(data)
+    )
+    
+    end = min(
+        getattr(data, field.name).index.max()
+        for field in fields(data)
+    )
+    
+    for field in fields(data):
+        df = getattr(data, field.name)
+        setattr(df, field.name, df.loc[start:end])
+
+
 def print_data_length(data: Data) -> None:
     
     for field in fields(data):
