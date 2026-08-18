@@ -22,7 +22,15 @@ def concat_agrometeo_data(
 
         df = pd.concat(
             [pd.read_csv(file, sep=";", decimal=",") for file in files],
-            ignore_index=True,
+            axis=0
         )
 
-        df.to_csv(output_path, index=False)
+        if output_path.exists():
+            print("Files yet exists.")
+            return
+        
+        df.to_csv(
+            output_path, 
+            sep=";", 
+            index=False
+            )
