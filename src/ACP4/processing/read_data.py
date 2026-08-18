@@ -44,7 +44,7 @@ def read_camel_data(
 
 
 def read_agro_data(timeseries_dir: str) -> dict:
-    csv_paths = [p for p in Path(timeseries_dir).rglob("*.csv")]
+    csv_paths = [p for p in Path(timeseries_dir).rglob("*.csv") if "concat" in str(p)]
 
     agro_dict = {}
 
