@@ -5,9 +5,10 @@ from dataclasses import dataclass, fields
 
 @dataclass
 class Data:
-    camel: pd.Series 
-    agro_herxheimweyher: pd.Series
-    agro_steinweiler: pd.Series
+    discharge: pd.DataFrame
+    camel: pd.DataFrame
+    agro_herxheimweyher: pd.DataFrame
+    agro_steinweiler: pd.DataFrame
 
 
 def filter_camel_for_gauge_id(
@@ -25,7 +26,7 @@ def filter_camel_for_gauge_id(
 def read_camel_data(
     timeseries_dir: str | Path,
     gauge_id: str
-    ) -> pd.Series:
+    ) -> pd.DataFrame:
     
     filepath = filter_camel_for_gauge_id(
         timeseries_dir=timeseries_dir,
@@ -50,7 +51,7 @@ def read_agro_data(timeseries_dir: str) -> dict:
 
     for path in csv_paths:
         file_name = path.stem
-        df = pd.read_csv(filepath_or_buffer=path, sep=";", decimal=",")
+        df = pd.read_csv(filepath_or_buffer=path, sep=";")
         
         df = df.rename(columns={"Tag": "Date"})
         
