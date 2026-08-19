@@ -18,7 +18,7 @@ def rename_agro_data(
     ) -> dict:
     
     for key, df in data.items():
-        df = df.rename(columns=agro_column_mapping)
+        df = df.rename(columns=mapping)
         
         data[key] = df
 
