@@ -16,6 +16,7 @@ dependencies = [
     "contextily",
     "geopandas",
     "shapely",
+    "rasterio"
 ]
 
 [dependency-groups]
