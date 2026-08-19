@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-from src.ACP4.config.config import Config
+from src.acp4.config.config import Config
 config = Config()
 
 
