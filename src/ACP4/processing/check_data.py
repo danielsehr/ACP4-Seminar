@@ -11,8 +11,8 @@ def print_data_length(data: Data) -> None:
         df = getattr(data, field.name)
         
         print(f"Name: {field.name}")
-        print("Length of available data:")
-        print(f"{df.index.max() - df.index.min()}")
+        print(f"Length of available data: {df.index.max() - df.index.min()}")
+        print(f"Period: {df.index.min()} - {df.index.max()}")
         print("------------------------")
 
 
