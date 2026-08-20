@@ -12,8 +12,11 @@ authors = [{ name = "Daniel Serr" }]
 
 dependencies = [
     "pandas",
+    
     "matplotlib",
     "contextily",
+    "seaborn",
+    
     "geopandas",
     "shapely",
     "rasterio"
