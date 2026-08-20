@@ -1,6 +1,9 @@
 from pathlib import Path
 import pandas as pd
 from dataclasses import dataclass, fields
+from acp4.config.config import Config
+
+config = Config()
 
 
 @dataclass
@@ -26,7 +29,7 @@ def filter_camel_for_gauge_id(
 def read_camel_data(
     timeseries_dir: str | Path,
     gauge_id: str
-    ) -> pd.DataFrame:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
     
     filepath = filter_camel_for_gauge_id(
         timeseries_dir=timeseries_dir,
@@ -41,7 +44,13 @@ def read_camel_data(
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")
     
-    return df
+    
+    discharge_cols = ['discharge_vol_obs', 'discharge_spec_obs', 'water_level_obs']
+    
+    df_discharge = df[discharge_cols]
+    df_camel = df.drop(columns = discharge_cols)
+    
+    return df_discharge, df_camel
 
 
 def read_agro_data(timeseries_dir: str) -> dict:
@@ -61,3 +70,14 @@ def read_agro_data(timeseries_dir: str) -> dict:
         agro_dict[file_name] = df
     
     return agro_dict
+
+
+def read_landuse_csv(
+    filepath: str | Path,
+    gauge_id: str = config.gauge_id
+    ) -> pd.DataFrame:
+    
+    df = pd.read_csv(filepath_or_buffer=filepath)
+    df = df[df["gauge_id"] == gauge_id]
+    
+    return df
