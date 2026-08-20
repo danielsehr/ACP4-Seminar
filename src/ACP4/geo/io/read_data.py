@@ -9,6 +9,7 @@ from rasterio.mask import mask
 
 from typing import Any
 
+
 def read_catchment(
     filepath: str | Path,
     gauge_id: str
@@ -47,10 +48,6 @@ def create_weatherstation_points(
     )
     
     return points_gdf
-
-
-
-    
 
 
 def read_dem_window(
