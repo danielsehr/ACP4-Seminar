@@ -1,5 +1,7 @@
+import pandas as pd
 from dataclasses import fields
 from acp4.io.read_data import Data
+
 
 agro_column_mapping = {
     "SUM_NN050": "precipitation_mean",
@@ -81,3 +83,16 @@ def align_climate_timeseries(data: Data) -> Data:
     data = intersect_datetime(data=data)
     
     return data
+
+
+def mean_by_month(df: pd.DataFrame):
+    df = (
+        df["temperature_mean"]
+        .groupby(df.index.month)
+        .agg(["mean", "std"])
+        .round(2)
+    )
+    
+    df.index = pd.to_datetime(df.index, format="%m").strftime("%b")
+    
+    return df
