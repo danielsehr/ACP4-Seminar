@@ -85,7 +85,7 @@ def align_climate_timeseries(data: Data) -> Data:
     return data
 
 
-def mean_by_month(df: pd.DataFrame):
+def mean_by_month(df: pd.DataFrame) -> pd.DataFrame:
     df = (
         df["temperature_mean"]
         .groupby(df.index.month)
