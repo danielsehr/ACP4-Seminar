@@ -29,7 +29,7 @@ def filter_camel_for_gauge_id(
 def read_camel_data(
     timeseries_dir: str | Path,
     gauge_id: str
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame]:
     
     filepath = filter_camel_for_gauge_id(
         timeseries_dir=timeseries_dir,
@@ -47,10 +47,13 @@ def read_camel_data(
     
     discharge_cols = ['discharge_vol_obs', 'discharge_spec_obs', 'water_level_obs']
     
-    df_discharge = df[discharge_cols]
-    df_camel = df.drop(columns = discharge_cols)
+    if all(col in df.columns for col in discharge_cols):
+        df_discharge = df[discharge_cols]
+        df_camel = df.drop(columns = discharge_cols)
     
-    return df_discharge, df_camel
+        return df_discharge, df_camel
+    
+    return df
 
 
 def read_agro_data(timeseries_dir: str) -> dict:
