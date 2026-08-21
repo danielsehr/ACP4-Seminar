@@ -46,7 +46,7 @@ def intersect_columns(data: Data) -> Data:
         df = getattr(data, field.name)
         
         if field.name == "discharge":
-                    continue
+            continue
         
         setattr(
             data,
@@ -87,7 +87,7 @@ def align_climate_timeseries(data: Data) -> Data:
 
 def mean_by_month(df: pd.DataFrame) -> pd.DataFrame:
     df = (
-        df["temperature_mean"]
+        df[["temperature_mean", "humidity_mean", "radiation_global_mean"]]
         .groupby(df.index.month)
         .agg(["mean", "std"])
         .round(2)
