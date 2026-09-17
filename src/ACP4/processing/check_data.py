@@ -52,6 +52,12 @@ def plot_flow_precip_temp(data: Data) -> None:
     sharex=True,
     )
 
+    location = {
+        "camel": "Camel",
+        "agro_herxheimweyher": "Herxheimweyher (agrometeo)",
+        "agro_steinweiler": "Steinweiler (agrometeo)",
+    }
+    
     # --- Discharge ---
     axs[0].plot(
         data.discharge.index,
@@ -60,6 +66,7 @@ def plot_flow_precip_temp(data: Data) -> None:
         color="black"
     )
 
+    axs[0].set_title(location["camel"])
     axs[0].set_ylabel("Discharge [m³/s]")
     axs[0].grid(alpha=0.3)
 
@@ -95,6 +102,7 @@ def plot_flow_precip_temp(data: Data) -> None:
         ax_precip.set_ylabel("Precipitation [mm]")
         ax_precip.invert_yaxis()
 
+        ax_temp.set_title(location[field.name])
         ax_temp.set_xlabel("Date")
         ax_temp.grid(alpha=0.3)
 

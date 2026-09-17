@@ -93,21 +93,18 @@ def plot_landuse(
     filepath: str | Path,
     ) -> None:
     
+    labels = ["Artificial surfaces", "Agricultural areas", "Forests and\nseminatural areas"] 
+    
     df = read_landuse_csv(
         filepath=filepath,
     )
 
     df_plot = df.drop(columns=["gauge_id"]).loc[:, (df != 0).any(axis=0)]
-    labels = df_plot.columns                                  
 
-    fig, ax = plt.subplots(figsize=(7, 7))
+    fig, ax = plt.subplots(figsize=(5, 4))
 
-    ax.pie(
-        df_plot.iloc[0],
-        labels=labels, 
-        autopct="%.1f%%",
-        startangle=90
-    )
-
+    ax.bar(x=labels, height=df_plot.iloc[0])
+    ax.set_ylabel("Proportion [%]")
+    
     plt.tight_layout()
     plt.show()

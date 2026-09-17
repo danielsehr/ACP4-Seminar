@@ -10,7 +10,9 @@ class Config:
     dem_asc_path: str = "data/mapping_files/dgm200_utm32s.asc"
     gauge_gpkg_path: str = "data/camels_de/CAMELS_DE_catchment_boundaries/gauging_stations/CAMELS_DE_gauging_stations.gpkg"
     landcover_csv_path: str = "data/camels_de/CAMELS_DE_landcover_attributes.csv"
-    
+    dwd_precip_txt_path: str = "data/dwd_precip/Niederschlag_1981-2010.txt"
+
+
     timeseries_dir: str = "data/camels_de/timeseries"    
     timeseries_simulated_dir: str = "data/camels_de/timeseries_simulated"    
     agrometeo_dir: str = "data/agrarmeteorologie_stations"

@@ -85,14 +85,79 @@ def align_climate_timeseries(data: Data) -> Data:
     return data
 
 
-def mean_by_month(df: pd.DataFrame) -> pd.DataFrame:
-    df = (
-        df[["temperature_mean", "humidity_mean", "radiation_global_mean"]]
-        .groupby(df.index.month)
-        .agg(["mean", "std"])
-        .round(2)
+def agg_sum_mean_std(
+    df: pd.DataFrame,
+    cols: list[str],
+    group_by: str
+    ) -> pd.DataFrame:
+    
+    if group_by == "month":
+        groups = df.index.month
+
+    elif group_by == "year":
+        groups = df.index.year
+    
+    return (
+            df[cols]
+            .groupby(groups)
+            .agg(["sum", "mean", "std"])
+            .round(2)
+        )   
+
+
+def summarize_data(
+    df: pd.DataFrame,
+    group_by: str
+    ) -> pd.DataFrame:
+    
+    columns = ["temperature_mean", "humidity_mean", "radiation_global_mean", "discharge_spec_obs", "precipitation_mean"]
+
+    available_columns = df.columns.intersection(columns).to_list()
+    
+    df = agg_sum_mean_std(
+        df=df, 
+        cols=available_columns, 
+        group_by=group_by
+    )
+
+    if group_by == "month":
+        df.index = pd.to_datetime(df.index, format="%m").strftime("%b")
+        
+    return df
+
+
+# --- 4. Rainfall Analysis --- #
+def agg_annually_sum(df: pd.DataFrame | pd.Series) -> pd.DataFrame | pd.Series:
+    
+    months_per_year = (
+        df
+        .groupby(df.index.year)
+        .apply(lambda x: x.index.month.nunique())
     )
     
-    df.index = pd.to_datetime(df.index, format="%m").strftime("%b")
+    complete_years = months_per_year[months_per_year == 12].index
     
-    return df
+    df = df[df.index.year.isin(complete_years)]
+    
+    return(
+        (df
+         .groupby([df.index.year])
+         .agg(["sum", "std"])
+         .round(2)
+        )
+    )
+    
+
+def agg_monthly_precip_sum(df: pd.DataFrame) -> pd.DataFrame:
+    
+    df = (
+        df
+        .groupby(df.index.to_period("M"))
+        .sum()
+        .rename("precipitation")
+        .to_frame()
+    )
+
+    df["month"] = df.index.month
+    
+    return(df)

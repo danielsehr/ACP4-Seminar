@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 from typing import Any
 
+from acp4.config.config import Config
+config = Config()
+
 
 def convert_lat_to_radians(latitude: float) -> float:
     return (np.pi / 180) * latitude
@@ -19,7 +22,7 @@ def calc_sunset_hour_angle(
     solar_declination: float,
     lat_radians: float
     ) -> float:
-    # return ( (np.pi / 2) -
+    
     return( 
            np.arccos(
                np.clip(
@@ -61,13 +64,15 @@ def calc_daily_extraterr_radiation(
     
 
 def calculate_hargreaves_pet(
-    doy: int | Any,
-    latitude: float,
-    solar_constant: float,
-    temperature_mean: float | pd.Series,
-    temperature_min: float | pd.Series,
-    temperature_max: float | pd.Series,
+    df: pd.DataFrame
     ) -> np.ndarray | pd.Series:
+    
+    doy=df.index.day_of_year
+    latitude=config.agrometeo_points[0][2]
+    solar_constant=config.solar_constant
+    temperature_mean=df.temperature_mean
+    temperature_min=df.temperature_min
+    temperature_max=df.temperature_max
     
     daily_extraterr_radiation = calc_daily_extraterr_radiation(
         doy=doy,
