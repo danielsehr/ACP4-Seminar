@@ -236,13 +236,19 @@ def plot_all_annual_precip_sum(data: dict) -> None:
     
     fig.tight_layout()
     plt.show()
+
+
+def plot_monthly_precip_sum(
+    df: pd.DataFrame | pd.Series,
+    ax: Axes,
+    location: str
+    ) -> None:
     
-    
-
-
-def plot_monthly_precip_sum(df: pd.DataFrame | pd.Series) -> None:
-
-    fig, ax = plt.subplots(figsize=(10, 5))
+    mapping = {
+        "camel": "Camel",
+        "agro_herxheimweyher": "Herxheimweyher (Agrometeo)",
+        "agro_steinweiler": "Steinweiler (Agrometeo)",
+    }
 
     df.boxplot(
         column="precipitation",
@@ -277,12 +283,84 @@ def plot_monthly_precip_sum(df: pd.DataFrame | pd.Series) -> None:
             alpha=0.6,
         )
 
-    ax.set_title("Monthly precipitation sum, period: 2014 - 2020")
-    # fig.suptitle("")
-
+    ax.set_title(mapping[location])
+    
+    
+def plot_all_monthly_precip_sum(data: dict) -> None:
+    fig, axs = plt.subplots(figsize=(9, 7), nrows=3, sharey=True)
+        
+    for ax, (key, df) in zip(axs, data.items()):
+        plot_monthly_precip_sum(df=df, ax=ax, location = key)
+    
+    plt.suptitle("Monthly precipitation sum, period: 2014 - 2020")
+    
     fig.tight_layout()
     plt.show()
-        
-        
     
 
+def plot_extreme_rainfall_events(
+    df: pd.Series,
+    # ax: Axes,
+    ax,
+    location: str
+    ) -> None:
+    
+    p99 = df.quantile(0.99)
+
+    colors = df.gt(p99).map({
+        True: "red",
+        False: "steelblue",
+    })
+    
+    
+    mapping = {
+        "camel": "Camel",
+        "agro_herxheimweyher": "Herxheimweyher (Agrometeo)",
+        "agro_steinweiler": "Steinweiler (Agrometeo)",
+    }
+
+    ax.bar(
+        df.index,
+        df,
+        color=colors,
+    )
+
+    ax.axhline(
+        p99,
+        linestyle="--",
+        label=f"99th percentile = {p99:.2f}",
+    )
+
+    ax.set_title(mapping[location])
+    ax.set_ylabel("Value")
+    ax.legend()
+
+
+def plot_all_extreme_rainfall_events(data: Data) -> None:
+    
+    fig, axs = plt.subplots(figsize=(12, 7), nrows=3, sharex=True)
+    
+    plot_fields = [
+        field for field in fields(data)
+        if field.name != "discharge"
+    ]
+
+    for ax, field in zip(axs, plot_fields):
+        
+        if field.name == "discharge":
+            continue
+        
+        df = getattr(data, field.name)
+        
+        plot_extreme_rainfall_events(
+            df=df["precipitation_mean"], 
+            ax=ax, 
+            location = field.name
+        )
+    
+    fig.tight_layout()
+    plt.show()
+    
+
+
+# --- 5. Streamflow Analysis --- #

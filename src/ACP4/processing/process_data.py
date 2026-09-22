@@ -146,6 +146,22 @@ def agg_annually_sum(df: pd.DataFrame | pd.Series) -> pd.DataFrame | pd.Series:
          .round(2)
         )
     )
+
+
+def agg_all_annually_sum(data: Data) -> dict:
+    result = {}
+    
+    for field in fields(data):
+        if field.name == "discharge":
+            continue
+        
+        df = getattr(data, field.name)
+        
+        df_aggregated = agg_annually_sum(df=df["precipitation_mean"])
+
+        result[field.name] = df_aggregated
+    
+    return(result)
     
 
 def agg_monthly_precip_sum(df: pd.DataFrame) -> pd.DataFrame:
@@ -161,3 +177,19 @@ def agg_monthly_precip_sum(df: pd.DataFrame) -> pd.DataFrame:
     df["month"] = df.index.month
     
     return(df)
+
+
+def agg_all_monthly_precip_sum(data: Data) -> dict:
+    result = {}
+        
+    for field in fields(data):
+        if field.name == "discharge":
+            continue
+        
+        df = getattr(data, field.name)
+        
+        df_aggregated = agg_monthly_precip_sum(df=df["precipitation_mean"])
+        
+        result[field.name] = df_aggregated
+            
+    return(result)        
