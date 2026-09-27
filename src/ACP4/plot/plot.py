@@ -3,9 +3,13 @@ import pandas as pd
 from dataclasses import fields
 
 import calendar
+import statsmodels.formula.api as smf
 
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.collections import LineCollection
+from matplotlib.lines import Line2D
+import matplotlib.dates as mdates
 import seaborn as sns
 
 from acp4.io.read_data import Data
@@ -300,8 +304,7 @@ def plot_all_monthly_precip_sum(data: dict) -> None:
 
 def plot_extreme_rainfall_events(
     df: pd.Series,
-    # ax: Axes,
-    ax,
+    ax: Axes,
     location: str
     ) -> None:
     
@@ -364,3 +367,245 @@ def plot_all_extreme_rainfall_events(data: Data) -> None:
 
 
 # --- 5. Streamflow Analysis --- #
+def plot_annual_discharge_sum(
+    df: pd.DataFrame | pd.Series,
+    ) -> None:
+    
+    plt.bar(
+        df.index,
+        df["sum"],
+        yerr=df["std"],
+        capsize=3
+    )
+    plt.ylabel("Annual flow [m3/s]")
+    plt.title("Mean annual specific discharge sums")
+    plt.grid(
+        axis="y",
+        alpha=0.3,
+    )
+
+
+def plot_monthly_discharge_mean(
+    df: pd.DataFrame | pd.Series,
+    ) -> None:
+    
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    ax.boxplot(
+        [
+            df.loc[df["month"] == month, "spec_discharge"]
+            for month in range(1, 13)
+        ],
+    )
+
+    ax.set_xlabel("Month")
+    ax.set_ylabel("Monthly specific discharge mean [mm]")
+    
+    ax.set_xticks(
+        range(1, 13),
+        [calendar.month_abbr[i] for i in range(1, 13)],
+    )
+
+    # Add jittered observations
+    for month in range(1, 13):
+
+        values = df.loc[
+            df["month"] == month,
+            "spec_discharge",
+        ]
+
+        x = np.random.normal(
+            loc=month,
+            scale=0.08,
+            size=len(values),
+        )
+
+        ax.scatter(
+            x,
+            values,
+            s=12,
+            alpha=0.6,
+        )
+
+    ax.set_title(
+        "Monthly specific discharge mean, period: 2014–2020"
+    )
+
+    fig.tight_layout()
+    plt.show()
+
+
+def plot_annual_max_flow_days(
+    df: pd.Series,
+    max_flows: pd.Series
+    ) -> None:
+    
+    
+    fig, ax = plt.subplots(figsize=(12, 7))
+
+    max_flows_ts = df.loc[df.isin(max_flows)]
+
+    ax.plot(
+        df.index,
+        df,
+        color="steelblue",
+    )
+
+    ax.scatter(
+        max_flows_ts.index,
+        max_flows_ts,
+        color="red",
+        zorder=3,
+    )
+
+
+    ax.set_ylabel("Specific discharge [mm]")
+
+    fig.tight_layout()
+    plt.show()
+    
+    
+
+def plot_rating_curve(df: pd.DataFrame) -> None:
+    df["year"] = [p.year for p in df.index]
+
+    fig, ax = plt.subplots()
+
+    sc = ax.scatter(
+        df["water_level_obs"],
+        df["discharge_spec_obs"],
+        c=df["year"],
+        s=1
+    )
+    plt.colorbar(sc)
+
+    ax.set_xlabel("[Observed daily water level [cm]")
+    ax.set_ylabel("Observed volumetric discharge [m3 s-1]")
+
+    plt.show()
+
+
+def plot_discharge_trends(df: pd.Series) -> None:
+
+    fig, axs = plt.subplots(
+        nrows=3,
+        sharex=True,
+        figsize=(10, 8),
+    )
+
+    df = df.reset_index(names="year")
+
+    variables = [
+        ("mean", "Value [mm]", "Annual mean specific discharge"),
+        ("max", "Value [mm]", "Annual maximum specific discharge"),
+        ("sum", "Value [mm]", "Annual sum specific discharge"),
+    ]
+
+    for ax, (column, ylab, title) in zip(axs, variables):
+
+        model = smf.ols(
+            formula=f"{column} ~ year",
+            data=df,
+        )
+
+        result = model.fit()
+        trend = result.predict(df)
+
+        ax.plot(
+            df["year"],
+            df[column],
+            marker="o",
+            label="Observed",
+        )
+
+        ax.plot(
+            df["year"],
+            trend,
+            linestyle="--",
+            label=(
+                f"slope = {result.params['year']:.3f}\n"
+                f"R² = {result.rsquared:.2f}"
+            ),
+        )
+
+        ax.set_ylabel(ylab)
+        ax.set_title(title)
+        ax.legend()
+
+    fig.tight_layout()
+    plt.show()
+
+
+def plot_high_low_percentile_flows(
+    df: pd.Series,
+    ) -> None:
+
+    p95 = df.quantile(0.95)
+    p05 = df.quantile(0.05)
+
+    # Convert datetime index to Matplotlib's numeric date representation
+    x = mdates.date2num(df.index)
+    y = df.to_numpy()
+
+    # Create line segments between consecutive observations
+    points = np.column_stack([x, y])
+
+    segments = np.stack(
+        [points[:-1], points[1:]],
+        axis=1,
+    )
+
+    # Color segments according to flow at their starting observation
+    colors = np.where(
+        y[:-1] > p95,
+        "red",
+        np.where(
+            y[:-1] < p05,
+            "blue",
+            "grey",
+        ),
+    )
+
+    fig, ax = plt.subplots(figsize=(12, 7))
+
+    line = LineCollection(
+        segments,
+        colors=colors,
+        linewidths=1,
+    )
+
+    ax.add_collection(line)
+
+    # Format x-axis as dates
+    ax.xaxis_date()
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.xaxis.set_major_formatter(
+        mdates.DateFormatter("%Y-%m-%d")
+    )
+
+    # Legend proxies
+    legend_lines = [
+        Line2D(
+            [0],
+            [0],
+            color="red",
+            linewidth=2,
+            label=f"> 95th percentile ({p95:.2f})",
+        ),
+        
+        Line2D(
+            [0],
+            [0],
+            color="blue",
+            linewidth=2,
+            label=f"< 5th percentile ({p05:.2f})",
+        ),
+    ]
+
+    ax.legend(handles=legend_lines)
+
+    ax.set_ylabel("Specific discharge [mm]")
+
+    fig.autofmt_xdate()
+    fig.tight_layout()
+    plt.show()

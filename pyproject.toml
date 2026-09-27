@@ -19,7 +19,9 @@ dependencies = [
     
     "geopandas",
     "shapely",
-    "rasterio"
+    "rasterio",
+
+    "statsmodels"
 ]
 
 [dependency-groups]

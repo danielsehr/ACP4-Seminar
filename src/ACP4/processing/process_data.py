@@ -193,3 +193,41 @@ def agg_all_monthly_precip_sum(data: Data) -> dict:
         result[field.name] = df_aggregated
             
     return(result)        
+
+
+
+# --- 5. Streamflow Analysis --- #
+def agg_annually_discharge(df: pd.Series) -> pd.DataFrame | pd.Series:
+    
+    months_per_year = (
+        df
+        .groupby(df.index.year)
+        .apply(lambda x: x.index.month.nunique())
+    )
+    
+    complete_years = months_per_year[months_per_year == 12].index
+    
+    df = df[df.index.year.isin(complete_years)]
+    
+    return(
+        (df
+         .groupby([df.index.year])
+         .agg(["mean", "sum", "max", "std"])
+         .round(2)
+        )
+    )
+    
+    
+def agg_monthly_discharge_mean(df: pd.Series) -> pd.DataFrame:
+    
+    df = (
+        df
+        .groupby(df.index.to_period("M"))
+        .sum()
+        .rename("spec_discharge")
+        .to_frame()
+    )
+
+    df["month"] = df.index.month
+    
+    return(df)    
