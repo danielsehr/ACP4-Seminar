@@ -21,7 +21,8 @@ dependencies = [
     "shapely",
     "rasterio",
 
-    "statsmodels"
+    "statsmodels",
+    "pymannkendall",
 ]
 
 [dependency-groups]
