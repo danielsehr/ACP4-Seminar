@@ -16,6 +16,13 @@ from acp4.io.read_data import Data
 from acp4.processing.process_data import summarize_data
 
 
+mapping = {
+    "camel": "Camel",
+    "agro_herxheimweyher": "Herxheimweyher (Agrometeo)",
+    "agro_steinweiler": "Steinweiler (Agrometeo)",
+}
+
+
 # --- 3. Climate Analysis --- #
 def print_minmax_month(data: Data) -> None:
     for field in fields(data):
@@ -492,8 +499,7 @@ def plot_discharge_trends(df: pd.Series) -> None:
         sharex=True,
         figsize=(10, 8),
     )
-
-    df = df.reset_index(names="year")
+    df = df.rename_axis("year").reset_index()
 
     variables = [
         ("mean", "Value [mm]", "Annual mean specific discharge"),
@@ -534,6 +540,7 @@ def plot_discharge_trends(df: pd.Series) -> None:
 
     fig.tight_layout()
     plt.show()
+
 
 
 def plot_high_low_percentile_flows(

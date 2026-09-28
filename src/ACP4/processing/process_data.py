@@ -1,5 +1,7 @@
 import pandas as pd
 from dataclasses import fields
+import pymannkendall as mk
+
 from acp4.io.read_data import Data
 
 
@@ -231,3 +233,42 @@ def agg_monthly_discharge_mean(df: pd.Series) -> pd.DataFrame:
     df["month"] = df.index.month
     
     return(df)    
+
+
+def subset_high_low_values(df: pd.Series) -> dict:
+    p95 = df.quantile(0.95)
+    p05 = df.quantile(0.05)
+
+    return(
+        {
+            "Q5": df[df < p05],
+            "Q95": df[df < p95],
+        }
+    )
+
+
+def calc_trend_metrics(df: pd.Series) -> tuple:
+
+    # Mann-Kendall-Test
+    mk_orig_results = mk.original_test(x_old=df, alpha=0.05)
+    mk_hamed_rao_results = mk.hamed_rao_modification_test(x_old=df, alpha=0.05)
+
+
+    # Theil-Sen's Slope Estimator
+    if mk_orig_results.h and mk_hamed_rao_results.h:
+        sens_slope = mk.sens_slope(df)
+
+        # Needs to_numpy due to bug in source code. -> Need to open an issue or PR
+        seasonal_sens_slope = mk.seasonal_sens_slope(df.to_numpy())
+    
+    else:
+        sens_slope = None
+        seasonal_sens_slope = None
+    
+    return(
+        mk_orig_results, 
+        mk_hamed_rao_results,
+        sens_slope, 
+        seasonal_sens_slope
+    )
+    
