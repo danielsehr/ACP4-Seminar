@@ -29,17 +29,18 @@ def filter_camel_for_gauge_id(
 def read_camel_data(
     timeseries_dir: str | Path,
     gauge_id: str
-    ) -> pd.DataFrame | tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
     
     filepath = filter_camel_for_gauge_id(
         timeseries_dir=timeseries_dir,
         gauge_id=gauge_id
-        )
+    )
     
     df = pd.read_csv(
         filepath_or_buffer=filepath, 
-        sep=",", decimal="."
-        )
+        sep=",", 
+        decimal="."
+    )
 
     df["date"] = pd.to_datetime(df["date"])
     df = df.set_index("date")

@@ -23,6 +23,8 @@ dependencies = [
 
     "statsmodels",
     "pymannkendall",
+
+    "cmcrameri",
 ]
 
 [dependency-groups]

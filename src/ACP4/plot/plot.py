@@ -11,6 +11,8 @@ from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 import matplotlib.dates as mdates
 import seaborn as sns
+import cmcrameri.cm as cmc
+
 
 from acp4.io.read_data import Data
 from acp4.processing.process_data import summarize_data
@@ -396,7 +398,7 @@ def plot_monthly_discharge_mean(
     df: pd.DataFrame | pd.Series,
     ) -> None:
     
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(12, 6))
     
     ax.boxplot(
         [
@@ -414,30 +416,47 @@ def plot_monthly_discharge_mean(
     )
 
     # Add jittered observations
+    all_x = []
+    all_values = []
+    all_years = []
+    
     for month in range(1, 13):
 
         values = df.loc[
             df["month"] == month,
             "spec_discharge",
         ]
+        
+        years = df.loc[
+            df["month"] == month,
+            "year"
+        ]
 
         x = np.random.normal(
             loc=month,
-            scale=0.08,
+            scale=0.1,
             size=len(values),
         )
-
-        ax.scatter(
-            x,
-            values,
-            s=12,
-            alpha=0.6,
-        )
+        
+        all_x.extend(x)
+        all_values.extend(values)
+        all_years.extend(years)
+    
+    scatter = ax.scatter(
+        all_x,
+        all_values,
+        s=12,
+        alpha=0.6,
+        c=all_years,
+        cmap=cmc.roma_r, 
+    )
 
     ax.set_title(
         "Monthly specific discharge mean, period: 2014–2020"
     )
-
+    
+    fig.colorbar(scatter, ax=ax, label="Year")
+    
     fig.tight_layout()
     plt.show()
 
@@ -492,19 +511,26 @@ def plot_rating_curve(df: pd.DataFrame) -> None:
     plt.show()
 
 
-def plot_discharge_trends(df: pd.Series) -> None:
+from acp4.processing.process_data import calc_trend_metrics
+
+def plot_discharge_trends(
+    df: pd.Series,
+    suptitle: str,
+    ) -> None:
 
     fig, axs = plt.subplots(
-        nrows=3,
+        nrows=4,
         sharex=True,
-        figsize=(10, 8),
+        figsize=(12, 12),
     )
+    
     df = df.rename_axis("year").reset_index()
 
     variables = [
         ("mean", "Value [mm]", "Annual mean specific discharge"),
         ("max", "Value [mm]", "Annual maximum specific discharge"),
         ("sum", "Value [mm]", "Annual sum specific discharge"),
+        ("count", "Number of Observation", "Annual count specific discharge"),
     ]
 
     for ax, (column, ylab, title) in zip(axs, variables):
@@ -517,6 +543,8 @@ def plot_discharge_trends(df: pd.Series) -> None:
         result = model.fit()
         trend = result.predict(df)
 
+        metrics = calc_trend_metrics(df=df[column])
+        
         ax.plot(
             df["year"],
             df[column],
@@ -530,7 +558,15 @@ def plot_discharge_trends(df: pd.Series) -> None:
             linestyle="--",
             label=(
                 f"slope = {result.params['year']:.3f}\n"
-                f"R² = {result.rsquared:.2f}"
+                f"R² = {result.rsquared:.2f}\n"
+                + (
+                    f"Significant: {metrics.mk_orig.h}"
+                    + (
+                        f"\nTheil-Sen slope = {metrics.sens_slope.slope:.3f}"
+                        if metrics.sens_slope is not None
+                        else ""
+                    )
+                )
             ),
         )
 
@@ -538,7 +574,8 @@ def plot_discharge_trends(df: pd.Series) -> None:
         ax.set_title(title)
         ax.legend()
 
-    fig.tight_layout()
+    plt.suptitle(suptitle)
+    plt.tight_layout()
     plt.show()
 
 

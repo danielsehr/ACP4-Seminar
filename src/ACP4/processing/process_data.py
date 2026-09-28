@@ -1,5 +1,6 @@
 import pandas as pd
 from dataclasses import fields
+from typing import NamedTuple
 import pymannkendall as mk
 
 from acp4.io.read_data import Data
@@ -14,6 +15,12 @@ agro_column_mapping = {
     "MAX_TA200max": "temperature_max",
     "SUM_PEN": "potential_evapotranspiration",
 }
+
+class TrendMetrics(NamedTuple):
+    mk_orig: object
+    # mk_hamed_rao: object
+    sens_slope: object | None
+    # seasonal_sens_slope: object | None
 
 
 def rename_agro_data(
@@ -199,22 +206,26 @@ def agg_all_monthly_precip_sum(data: Data) -> dict:
 
 
 # --- 5. Streamflow Analysis --- #
-def agg_annually_discharge(df: pd.Series) -> pd.DataFrame | pd.Series:
+def agg_annually_discharge(
+    df: pd.Series,
+    complete_years_only: bool = True,
+    ) -> pd.DataFrame | pd.Series:
     
-    months_per_year = (
-        df
-        .groupby(df.index.year)
-        .apply(lambda x: x.index.month.nunique())
-    )
-    
-    complete_years = months_per_year[months_per_year == 12].index
-    
-    df = df[df.index.year.isin(complete_years)]
+    if complete_years_only:
+        months_per_year = (
+            df
+            .groupby(df.index.year)
+            .apply(lambda x: x.index.month.nunique())
+        )
+        
+        complete_years = months_per_year[months_per_year == 12].index
+        
+        df = df[df.index.year.isin(complete_years)]
     
     return(
         (df
          .groupby([df.index.year])
-         .agg(["mean", "sum", "max", "std"])
+         .agg(["mean", "sum", "max", "std", "count"])
          .round(2)
         )
     )
@@ -231,23 +242,27 @@ def agg_monthly_discharge_mean(df: pd.Series) -> pd.DataFrame:
     )
 
     df["month"] = df.index.month
+    df["year"] = df.index.year
     
     return(df)    
 
 
-def subset_high_low_values(df: pd.Series) -> dict:
+def subset_high_low_values(df: pd.Series) -> dict[str, pd.Series]:
     p95 = df.quantile(0.95)
     p05 = df.quantile(0.05)
 
+    # print(f"p05: {p05:.2f}")
+    # print(f"p95: {p95:.2f}")
+    
     return(
         {
-            "Q5": df[df < p05],
-            "Q95": df[df < p95],
+            "Q05": df[df < p05],
+            "Q95": df[df > p95],
         }
     )
 
 
-def calc_trend_metrics(df: pd.Series) -> tuple:
+def calc_trend_metrics(df: pd.Series) -> TrendMetrics:
 
     # Mann-Kendall-Test
     mk_orig_results = mk.original_test(x_old=df, alpha=0.05)
@@ -266,9 +281,11 @@ def calc_trend_metrics(df: pd.Series) -> tuple:
         seasonal_sens_slope = None
     
     return(
-        mk_orig_results, 
-        mk_hamed_rao_results,
-        sens_slope, 
-        seasonal_sens_slope
+        TrendMetrics(
+            mk_orig=mk_orig_results,
+            # mk_hamed_rao=mk_hamed_rao_results,
+            sens_slope=sens_slope,
+            # seasonal_sens_slope=seasonal_sens_slope
+        )
     )
     
