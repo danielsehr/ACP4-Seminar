@@ -24,6 +24,9 @@ class Config:
 
     solar_constant: float = 0.0820 #  MJ m-2 min-1
     
+    day_to_year: int = 365
+    meter_to_milimeter: int = 1000
+    
 
 # @dataclass
 # class Excercise2Config:

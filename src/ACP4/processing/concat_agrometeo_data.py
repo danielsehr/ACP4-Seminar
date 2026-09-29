@@ -33,4 +33,4 @@ def concat_agrometeo_data(
             output_path, 
             sep=";", 
             index=False
-            )
+        )

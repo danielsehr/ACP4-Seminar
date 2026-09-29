@@ -3,7 +3,10 @@ from dataclasses import fields
 from typing import NamedTuple
 import pymannkendall as mk
 
+from acp4.config.config import Config
 from acp4.io.read_data import Data
+
+config = Config()
 
 
 agro_column_mapping = {
@@ -289,3 +292,16 @@ def calc_trend_metrics(df: pd.Series) -> TrendMetrics:
         )
     )
     
+
+def calc_longterm_runoff_coeff(
+    discharge: pd.Series,
+    precipitation: pd.Series,
+    ) -> float:
+    
+    discharge_mean = discharge.mean()
+    precipitation_mean = precipitation.mean()
+
+    runoff_ratio = (discharge_mean / precipitation_mean).round(3)
+
+    print(f"Long-term runoff ratio: {runoff_ratio}")
+    return(runoff_ratio)
