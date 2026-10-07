@@ -27,6 +27,8 @@ class Config:
     day_to_year: int = 365
     meter_to_milimeter: int = 1000
     
+    plot_output_dir: str = "C:/Users/Administrator/Desktop/Uni Landau/Master/4. Semester/ACP4/Submission/report/figures/"
+    
 
 # @dataclass
 # class Excercise2Config:

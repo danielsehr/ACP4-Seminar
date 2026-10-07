@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import figure
 
 from dataclasses import fields
 from acp4.io.read_data import Data
@@ -11,6 +12,7 @@ def print_data_length(data: Data) -> None:
         df = getattr(data, field.name)
         
         print(f"Name: {field.name}")
+        print(f"Num rows of available data: {len(df.index)}")
         print(f"Length of available data: {df.index.max() - df.index.min()}")
         print(f"Period: {df.index.min()} - {df.index.max()}")
         print("------------------------")
@@ -44,12 +46,12 @@ def check_duplicated_dates(data: Data) -> None:
         print("------------------------")
 
 
-def plot_flow_precip_temp(data: Data) -> None:
+def plot_flow_precip_temp(data: Data) -> figure:
     fig, axs = plt.subplots(
-    nrows=4,
-    ncols=1,
-    figsize=(12, 8),
-    sharex=True,
+        nrows=4,
+        ncols=1,
+        figsize=(12, 8),
+        sharex=True,
     )
 
     location = {
@@ -111,6 +113,8 @@ def plot_flow_precip_temp(data: Data) -> None:
     fig.tight_layout()
 
     plt.show()
+    
+    return(fig)
         
         
 def plot_flow_with_na(

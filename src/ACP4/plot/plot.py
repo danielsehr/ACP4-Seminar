@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from dataclasses import fields
@@ -6,6 +7,7 @@ import calendar
 import statsmodels.formula.api as smf
 
 import matplotlib.pyplot as plt
+from matplotlib import figure
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
@@ -16,13 +18,26 @@ import cmcrameri.cm as cmc
 
 from acp4.io.read_data import Data
 from acp4.processing.process_data import summarize_data
-
+from acp4.config.config import Config
+config = Config()
 
 mapping = {
     "camel": "Camel",
     "agro_herxheimweyher": "Herxheimweyher (Agrometeo)",
     "agro_steinweiler": "Steinweiler (Agrometeo)",
 }
+
+
+def save_plot(
+    plot: figure,
+    name: str,
+    ) -> None:
+    
+    plot.savefig(
+        Path(config.plot_output_dir) / f"{name}.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
 
 
 # --- 3. Climate Analysis --- #
@@ -107,7 +122,7 @@ def plot_monthly_temp_hum_rad(
     ax2.set_ylabel("Mean montly global radiation [W/m²]")
 
 
-def plot_all_monthly_temp_hum_rad(data: Data) -> None:
+def plot_all_monthly_temp_hum_rad(data: Data) -> figure:
 
     datasets = [
         (field.name, getattr(data, field.name))
@@ -132,12 +147,14 @@ def plot_all_monthly_temp_hum_rad(data: Data) -> None:
 
         plot_monthly_temp_hum_rad(
             df=df_monthly,
-            name=name,
+            name=mapping[name],
             ax=ax
         )
 
     fig.tight_layout()
     plt.show()
+    
+    return fig
         
 
 def plot_pet_comparison(
@@ -167,7 +184,7 @@ def plot_both_pet_comparison(
     camel_pet: pd.Series,
     herxheimweyher_pet: pd.Series,
     steinweiler_pet: pd.Series,
-    ) -> None:
+    ) -> figure:
     
     agrometeo_pets = {
         "Herxheimweyher (Hargreaves)": herxheimweyher_pet,
@@ -205,6 +222,8 @@ def plot_both_pet_comparison(
 
     fig.tight_layout()
     plt.show()
+    
+    return fig
 
 
         
@@ -238,7 +257,7 @@ def plot_annual_precip_sum(
     )
 
 
-def plot_all_annual_precip_sum(data: dict) -> None:
+def plot_all_annual_precip_sum(data: dict) -> figure:
     
     fig, axs = plt.subplots(figsize=(9, 7), nrows=3)
     
@@ -249,6 +268,8 @@ def plot_all_annual_precip_sum(data: dict) -> None:
     
     fig.tight_layout()
     plt.show()
+    
+    return fig
 
 
 def plot_monthly_precip_sum(
@@ -299,7 +320,7 @@ def plot_monthly_precip_sum(
     ax.set_title(mapping[location])
     
     
-def plot_all_monthly_precip_sum(data: dict) -> None:
+def plot_all_monthly_precip_sum(data: dict) -> figure:
     fig, axs = plt.subplots(figsize=(9, 7), nrows=3, sharey=True)
         
     for ax, (key, df) in zip(axs, data.items()):
@@ -309,6 +330,8 @@ def plot_all_monthly_precip_sum(data: dict) -> None:
     
     fig.tight_layout()
     plt.show()
+    
+    return fig
     
 
 def plot_extreme_rainfall_events(
@@ -344,11 +367,11 @@ def plot_extreme_rainfall_events(
     )
 
     ax.set_title(mapping[location])
-    ax.set_ylabel("Value")
+    ax.set_ylabel("Precipitation [mm]")
     ax.legend()
 
 
-def plot_all_extreme_rainfall_events(data: Data) -> None:
+def plot_all_extreme_rainfall_events(data: Data) -> figure:
     
     fig, axs = plt.subplots(figsize=(12, 7), nrows=3, sharex=True)
     
@@ -373,30 +396,36 @@ def plot_all_extreme_rainfall_events(data: Data) -> None:
     fig.tight_layout()
     plt.show()
     
+    return fig
+    
 
 
 # --- 5. Streamflow Analysis --- #
 def plot_annual_discharge_sum(
     df: pd.DataFrame | pd.Series,
-    ) -> None:
-    
-    plt.bar(
+    ) -> figure:
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    ax.bar(
         df.index,
         df["sum"],
         yerr=df["std"],
-        capsize=3
+        capsize=3,
     )
-    plt.ylabel("Annual flow [m3/s]")
-    plt.title("Mean annual specific discharge sums")
-    plt.grid(
+
+    ax.set_ylabel("Annual flow [m³/s]")
+    ax.set_title("Mean annual specific discharge sums")
+    ax.grid(
         axis="y",
         alpha=0.3,
     )
 
+    return fig
 
 def plot_monthly_discharge_mean(
     df: pd.DataFrame | pd.Series,
-    ) -> None:
+    ) -> figure:
     
     fig, ax = plt.subplots(figsize=(12, 6))
     
@@ -451,20 +480,20 @@ def plot_monthly_discharge_mean(
         cmap=cmc.roma_r, 
     )
 
-    ax.set_title(
-        "Monthly specific discharge mean, period: 2014–2020"
-    )
+    ax.set_title("Monthly specific discharge mean")
     
     fig.colorbar(scatter, ax=ax, label="Year")
     
     fig.tight_layout()
     plt.show()
+    
+    return(fig)
 
 
 def plot_annual_max_flow_days(
     df: pd.Series,
     max_flows: pd.Series
-    ) -> None:
+    ) -> figure:
     
     
     fig, ax = plt.subplots(figsize=(12, 7))
@@ -490,9 +519,10 @@ def plot_annual_max_flow_days(
     fig.tight_layout()
     plt.show()
     
+    return(fig)
     
 
-def plot_rating_curve(df: pd.DataFrame) -> None:
+def plot_rating_curve(df: pd.DataFrame) -> figure:
     df["year"] = [p.year for p in df.index]
 
     fig, ax = plt.subplots()
@@ -503,13 +533,17 @@ def plot_rating_curve(df: pd.DataFrame) -> None:
         c=df["year"],
         s=1
     )
-    plt.colorbar(sc)
+    
+    cbar = plt.colorbar(sc)
+    # cbar.set_label("Year")
+    cbar.ax.set_title("Year")
 
     ax.set_xlabel("[Observed daily water level [cm]")
     ax.set_ylabel("Observed volumetric discharge [m3 s-1]")
 
     plt.show()
 
+    return fig
 
 from acp4.processing.process_data import calc_trend_metrics
 
@@ -653,3 +687,5 @@ def plot_high_low_percentile_flows(
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.show()
+    
+    

@@ -247,7 +247,7 @@ def agg_monthly_discharge_mean(df: pd.Series) -> pd.DataFrame:
     df["month"] = df.index.month
     df["year"] = df.index.year
     
-    return(df)    
+    return(df) 
 
 
 def subset_high_low_values(df: pd.Series) -> dict[str, pd.Series]:
