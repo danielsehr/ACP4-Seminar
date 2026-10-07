@@ -17,9 +17,10 @@ import cmcrameri.cm as cmc
 
 
 from acp4.io.read_data import Data
-from acp4.processing.process_data import summarize_data
+from acp4.processing.process_data import summarize_data, calc_trend_metrics
 from acp4.config.config import Config
 config = Config()
+
 
 mapping = {
     "camel": "Camel",
@@ -423,6 +424,7 @@ def plot_annual_discharge_sum(
 
     return fig
 
+
 def plot_monthly_discharge_mean(
     df: pd.DataFrame | pd.Series,
     ) -> figure:
@@ -545,12 +547,119 @@ def plot_rating_curve(df: pd.DataFrame) -> figure:
 
     return fig
 
-from acp4.processing.process_data import calc_trend_metrics
+
+def plot_annual_temperature_trend(
+    df: pd.DataFrame,
+    ) -> figure:
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    model = smf.ols(
+        formula="temperature_mean ~ date",
+        data=df,
+    )
+
+    result = model.fit()
+    trend = result.predict(df)
+    
+    metrics = calc_trend_metrics(df=df["temperature_mean"])
+    
+    ax.plot(
+        df["date"],
+        df["temperature_mean"],
+        marker="o",
+        color="red"
+    )
+    
+    ax.plot(
+        df["date"],
+        trend,
+        linestyle="--",
+        label=(
+            f"slope = {result.params['date']:.3f}\n"
+            f"R² = {result.rsquared:.2f}\n"
+            + (
+                f"Significant: {metrics.mk_orig.h}"
+                + (
+                    f"\nTheil-Sen slope = {metrics.sens_slope.slope:.3f}"
+                    if metrics.sens_slope is not None
+                    else ""
+                )
+            )
+        ),
+    )
+
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Mean annual temperature [°C]")
+    ax.set_title("Mean annual temperature")
+    ax.grid(axis="y", alpha=0.3)
+
+    ax.legend()
+    
+    fig.tight_layout()
+    plt.show()
+
+    return fig
+
+
+def plot_annual_precip_trend(
+    df: pd.DataFrame,
+    # ) -> figure:
+    ):
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    model = smf.ols(
+        formula="precipitation_mean ~ date",
+        data=df,
+    )
+
+    result = model.fit()
+    trend = result.predict(df)
+    
+    metrics = calc_trend_metrics(df=df["precipitation_mean"])
+    
+    ax.plot(
+        df["date"],
+        df["precipitation_mean"],
+        marker="o",
+    )
+    
+    ax.plot(
+        df["date"],
+        trend,
+        linestyle="--",
+        label=(
+            f"slope = {result.params['date']:.3f}\n"
+            f"R² = {result.rsquared:.2f}\n"
+            + (
+                f"Significant: {metrics.mk_orig.h}"
+                + (
+                    f"\nTheil-Sen slope = {metrics.sens_slope.slope:.3f}"
+                    if metrics.sens_slope is not None
+                    else ""
+                )
+            )
+        ),
+    )
+
+    ax.set_xlabel("Year")
+    ax.set_ylabel("Annual precipitation sum [mm]")
+    ax.set_title("Mean annual precipitation sum")
+    ax.grid(axis="y", alpha=0.3)
+
+    ax.legend()
+    
+    fig.tight_layout()
+    plt.show()
+
+    return fig
+
 
 def plot_discharge_trends(
     df: pd.Series,
     suptitle: str,
-    ) -> None:
+    ) -> figure:
 
     fig, axs = plt.subplots(
         nrows=4,
@@ -611,12 +720,14 @@ def plot_discharge_trends(
     plt.suptitle(suptitle)
     plt.tight_layout()
     plt.show()
+    
+    return fig
 
 
 
 def plot_high_low_percentile_flows(
     df: pd.Series,
-    ) -> None:
+    ) -> figure:
 
     p95 = df.quantile(0.95)
     p05 = df.quantile(0.05)
@@ -686,6 +797,9 @@ def plot_high_low_percentile_flows(
 
     fig.autofmt_xdate()
     fig.tight_layout()
+
     plt.show()
+    
+    return fig
     
     
