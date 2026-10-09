@@ -64,15 +64,23 @@ def calc_daily_extraterr_radiation(
     
 
 def calculate_hargreaves_pet(
-    df: pd.DataFrame
+    df: pd.DataFrame,
+    camels: pd.DataFrame | None = None,
     ) -> np.ndarray | pd.Series:
     
     doy=df.index.day_of_year
     latitude=config.agrometeo_points[0][2]
     solar_constant=config.solar_constant
-    temperature_mean=df.temperature_mean
-    temperature_min=df.temperature_min
-    temperature_max=df.temperature_max
+    
+    if camels is None:
+        temperature_mean=df.temperature_mean
+        temperature_min=df.temperature_min
+        temperature_max=df.temperature_max
+    
+    temperature_mean=camels.temperature_mean
+    temperature_min=camels.temperature_min
+    temperature_max=camels.temperature_max
+
     
     daily_extraterr_radiation = calc_daily_extraterr_radiation(
         doy=doy,
